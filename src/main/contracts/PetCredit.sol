@@ -54,27 +54,43 @@ string public message;
     }
 
 // inquiry data
-    function select(string memory name) public constant returns(bytes32[], int[], bytes32[]){
+    function get(int id) public constant returns(bytes32[] memory ids,bytes32[] memory name, bytes32[] memory cate,  int[] bdate, int[] price, bytes32[] memory desc, bytes32[] memory extend){
         TableFactory tf = TableFactory(0x1001);
         Table table = tf.openTable("t_test3");
 
         // If the condition is empty, it means no filtering. You can use conditional filtering as needed.
         Condition condition = table.newCondition();
+        if(id!=0)
+        condition.EQ("id", id);
 
         Entries entries = table.select("name", condition);
-        bytes32[] memory user_name_bytes_list = new bytes32[](uint256(entries.size()));
-        int[] memory item_id_list = new int[](uint256(entries.size()));
-        bytes32[] memory item_name_bytes_list = new bytes32[](uint256(entries.size()));
+
+
+ ids=new bytes32[](uint256(entries.size()));
+ name=new bytes32[](uint256(entries.size()));
+ cate=new bytes32[](uint256(entries.size()));
+ bdate=new int[](uint256(entries.size()));
+ price=new int[](uint256(entries.size()));
+ desc=new bytes32[](uint256(entries.size()));
+ //active=new bool[](uint256(entries.size()));
+ extend=new bytes32[](uint256(entries.size()));
+ //addr=new address[](uint256(entries.size()));
 
         for(int i=0; i<entries.size(); ++i) {
             Entry entry = entries.get(i);
 
-            user_name_bytes_list[uint256(i)] = entry.getBytes32("id");
-            item_id_list[uint256(i)] = entry.getInt("price");
-            item_name_bytes_list[uint256(i)] = entry.getBytes32("cate");
+ids[uint256(i)]=entry.getBytes32("id");
+name[uint256(i)]=entry.getBytes32("name");
+cate[uint256(i)]=entry.getBytes32("cate");
+bdate[uint256(i)]=entry.getInt("bdate");
+price[uint256(i)]=entry.getInt("price");
+desc[uint256(i)]=entry.getBytes32("desc");
+//active[uint256(i)]=entry.getBoolean("active");
+extend[uint256(i)]=entry.getBytes32("extend");
+//addr[uint256(i)]=entry.getAddress("addr");
         }
 
-        return (user_name_bytes_list, item_id_list, item_name_bytes_list);
+        // return (user_name_bytes_list, item_id_list, item_name_bytes_list);
     }
 
     //add 1 new pet
