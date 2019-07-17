@@ -13,8 +13,20 @@ contract PetTable {
 	//記錄所有pet的id index
 	string[] id_index;
 	
+	address private admin; //管理員的地址
+	
+	modifier onlyAdmin() {
+        if(admin == msg.sender){
+            _;
+        }
+    }
+    
+	constructor() public {
+        admin = msg.sender;
+    }
+    
     //create table
-    function create() public returns(int){
+    function create() public onlyAdmin() returns(int) {
         TableFactory tf = TableFactory(0x1001); //The fixed address is 0x1001 for TableFactory
         
         int count = tf.createTable("t_pet", "id", "name, petType, birthday, price, description, active, url, owner_address");
@@ -24,7 +36,7 @@ contract PetTable {
     }
 	
 	//select records
-    function select(string idx) public constant returns(string[] memory ids,string[] memory name_list, string[] memory type_list,
+    function select(string idx) public onlyAdmin() constant returns(string[] memory ids,string[] memory name_list, string[] memory type_list,
 	    int[] price_list, string[] memory description_list, string[] memory active_list, address[] memory owner_address_list){
         TableFactory tf = TableFactory(0x1001);
         Table table = tf.openTable("t_pet");
@@ -54,6 +66,23 @@ contract PetTable {
 		}
  
     }
+	
+	//select records
+    function selectEntry(string id) public  constant returns(Entry){
+        TableFactory tf = TableFactory(0x1001);
+        Table table = tf.openTable("t_pet");
+        
+        Condition condition = table.newCondition();
+        
+        Entries entries = table.select(id, condition);
+        
+	    if(entries.size() > 0){
+	        return entries.get(0);
+	    }
+ 
+    }
+	
+	
 	
 	//insert records
     function insert(string name, string petType, int price, string description, string active, string url, int birthday) public returns(int) {
@@ -103,8 +132,23 @@ contract PetTable {
         
         return count;
     }
+    
+    function update(string id, Entry entry) public returns(int){
+        TableFactory tf = TableFactory(0x1001);
+        Table table = tf.openTable("t_pet");
+        
+        Condition condition = table.newCondition();
+        condition.EQ("id", id);
+        
+        int count = table.update(id, entry, condition);
+        emit UpdateResult(count);
+        
+        return count;
+    }
+
+    
     //remove records
-    function remove(string id) public returns(int){
+    function remove(string id) public onlyAdmin() returns(int){
         TableFactory tf = TableFactory(0x1001);
         Table table = tf.openTable("t_pet");
         
@@ -118,7 +162,7 @@ contract PetTable {
     }
     
     //select all records
-    function selectAll() public constant returns(string[] memory ids,string[] memory name_list, string[] memory type_list,
+    function selectAll() public onlyAdmin() constant returns(string[] memory ids,string[] memory name_list, string[] memory type_list,
 	    int[] price_list, string[] memory description_list, string[] memory active_list, address[] memory owner_address_list){
         TableFactory tf = TableFactory(0x1001);
         Table table = tf.openTable("t_pet");
@@ -155,7 +199,7 @@ contract PetTable {
 		}
     }
     
-    function getIdIndex() constant returns(string[]){
+    function getIdIndex() constant onlyAdmin() returns(string[]){
         return id_index;
     }
     

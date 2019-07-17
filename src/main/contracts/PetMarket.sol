@@ -5,8 +5,8 @@ import "./PetTable.sol";
 
 contract PetMarket{
     
-    UsersTable usersTable = UsersTable(0x58fa2e7a9a13e36e74469b0747c8388a64469380);
-    PetTable petTable = PetTable(0x4e3e0cbf93e9e3fae5d4ba67d9fa513e4c3d6293);
+    UsersTable private usersTable = UsersTable(0x27ca8845e94ca5484c17d45bdc708ae1617e769c);
+    PetTable private petTable = PetTable(0x22a8519ab696e18fd6dd77a1c4eaab5b7d50fbe2);
     
     address private admin; //管理員的地址
     uint public salesCount;  //sales count
@@ -39,23 +39,49 @@ contract PetMarket{
         return true;
     }
     
-	function cancel() public returns(uint){
-        //admin or owner
+	function cancel(string id) public{
+        Entry entry = petTable.selectEntry(id);
+        entry.set("active", "false");
+        if(isAdmin()){
+            petTable.update(id, entry);   
+        }else{
+            address owner_address = entry.getAddress("owner_address");
+            if(owner_address != msg.sender)throw;
+            petTable.update(id, entry);   
+        }
+        
+    }
+    
+    function active(string id) public{
+        Entry entry = petTable.selectEntry(id);
+        entry.set("active", "true");
+        if(isAdmin()){
+            petTable.update(id, entry);   
+        }else{
+            address owner_address = entry.getAddress("owner_address");
+            if(owner_address != msg.sender)throw;
+            petTable.update(id, entry);   
+        }
         
     }
 	
-    function modifyPrice(string id, int price) public returns(bool){
-        //entry = petTable.select();
-        
-        //update price
-        
-        return true;
+    function modifyPrice(string id, int price) public {
+        Entry entry = petTable.selectEntry(id);
+        entry.set("price", price);
+        if(isAdmin()){
+            petTable.update(id, entry);   
+        }else{
+            address owner_address = entry.getAddress("owner_address");
+            if(owner_address != msg.sender)throw;
+            petTable.update(id, entry);   
+        }
     }
     
-    function getBalance() public constant returns(int){
-        //UsersTable.select()
+    function getBalance(string id) public constant returns(int){
+        Entry entry = usersTable.selectEntry(id);
+        if(!isAdmin() && entry.getAddress("user_address") != msg.sender) throw;
+        return entry.getInt("balance");
         
-        return 0;
     }
     
     function getPetList() public constant returns(string){
@@ -95,8 +121,15 @@ contract PetMarket{
     
    
     
-    function getSaleCount() public constant returns(uint){
+    function getSalesCount() public constant returns(uint){
         return salesCount;
     }
      
+    function address2str(address x) internal pure returns (string) {
+        bytes memory b = new bytes(20);
+        for (uint i = 0; i < 20; i++)
+            b[i] = byte(uint8(uint(x) / (2**(8*(19 - i)))));
+        
+        return string(b);
+    } 
 }

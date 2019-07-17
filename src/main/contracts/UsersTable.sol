@@ -13,8 +13,20 @@ contract UsersTable {
 	//記錄所有user的id index
 	string[] id_index;
 	
+	address private admin; //管理員的地址
+	
+	modifier onlyAdmin() {
+        if(admin == msg.sender){
+            _;
+        }
+    }
+    
+	constructor() public {
+        admin = msg.sender;
+    }
+    
     //create table
-    function create() public returns(int){
+    function create() public onlyAdmin() returns(int){
         TableFactory tf = TableFactory(0x1001); //The fixed address is 0x1001 for TableFactory
         
         int count = tf.createTable("t_users", "id", "userName, balance, user_address");
@@ -49,6 +61,21 @@ contract UsersTable {
  
     }
 	
+	//select records
+    function selectEntry(string id) public constant returns(Entry){
+        TableFactory tf = TableFactory(0x1001);
+        Table table = tf.openTable("t_users");
+        
+        Condition condition = table.newCondition();
+        
+        Entries entries = table.select(id, condition);
+        
+	    if(entries.size() > 0){
+	        return entries.get(0);
+	    }
+ 
+    }
+    
 	//insert records
     function insert(string userName, int balance) public returns(int) {
         TableFactory tf = TableFactory(0x1001);
@@ -68,6 +95,7 @@ contract UsersTable {
 		
         return count;
     }
+    
     //update records
     function update(string id, string userName, int balance) public returns(int) {
         TableFactory tf = TableFactory(0x1001);
@@ -87,6 +115,21 @@ contract UsersTable {
         
         return count;
     }
+    
+    function update(string id, Entry entry) public returns(int){
+        TableFactory tf = TableFactory(0x1001);
+        Table table = tf.openTable("t_users");
+        
+        Condition condition = table.newCondition();
+        condition.EQ("id", id);
+        
+        int count = table.update(id, entry, condition);
+        emit UpdateResult(count);
+        
+        return count;
+    }
+    
+    
     //remove records
     function remove(string id) public returns(int){
         TableFactory tf = TableFactory(0x1001);
