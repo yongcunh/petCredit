@@ -2,6 +2,7 @@ package com.webank.blockchain.lagcredit.service;
 
 import java.math.BigInteger;
 
+import com.webank.blockchain.lagcredit.contracts.TableTest;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -12,14 +13,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TableTestServiceTest   extends BaseTest {
 	
-	String contractAddress = "0xa3a7f96b83783e515adbbc1526b33afc784b3801";
+	String contractAddress = "0x72f1de1a333e36c2c3ec45ac83d0a65d644fd754";
 	
 	@Autowired
 	TableTestService tableTestService;
 	
 	@Test
 	public void testDeploy() {
-		tableTestService.deploy();
+		TableTest tableTest = tableTestService.deploy();
+//		contractAddress = tableTest.getContractAddress();
+		log.info("TableTest address : {}", tableTest.getContractAddress());
 	}
 	
 	@Test

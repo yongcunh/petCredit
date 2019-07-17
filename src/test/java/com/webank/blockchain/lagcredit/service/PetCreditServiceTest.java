@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PetCreditServiceTest  extends BaseTest {
 	
-	String address = "0xb044d89b97d0daeaf3e851b399f50ac19a7c41f7";
+	String address = "0x4f90547bff5de9dd65506834537097cb362fa883";
 	
 	   
     @Autowired

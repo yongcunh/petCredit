@@ -42,7 +42,7 @@ public class LagCreditServiceTest extends BaseTest {
     
     private String toAddr = "0x015e68c28690b3250b36319d7c04653e0fbc4f26";
     
-    private String creditAddr = "0x60e94861bac854a8c1f4e4572a7f8fc2ecb1e2d7";
+    private String creditAddr = "0xc458a15ff531024801e10d750e4871ecb70323fb";
     
     @Test
     public void testdeploy(){

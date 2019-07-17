@@ -46,7 +46,11 @@ public class TableTestService {
 	
 	public void create(String contractAddress) {
 		TableTest tableTest = load(contractAddress);
-		tableTest.create();
+		try {
+			tableTest.create().send();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public TableTest load(String contractAddress) {
