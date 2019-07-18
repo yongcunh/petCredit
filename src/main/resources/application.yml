@@ -12,7 +12,13 @@ channel-service:
 user-key:
   user-key: 104e5e45be6c3d81e22bde249e50cf022cf6724fbc22aa5fa0a46805ca6e2c7 # user key 
 
-
 #public key : 0x0108619390774748dd0c9e31b7498e99fc85938d5967802de2e2d3a4bef340b1440458528218735417155c127fbd70e339db5d78e5a34f6e69c481ffc759a77f
 #private key: 104e5e45be6c3d81e22bde249e50cf022cf6724fbc22aa5fa0a46805ca6e2c7
 #address : 0x0aed82ada984fc9ba8406e6112f92bb02e498c84*/
+
+#使用初始化合約後，將生成的都記錄在這些
+address-config:
+  #petMarket smart contract address
+  petMarket-contract-address: "0xbf86ea8ecc27a2e1a414ecf2ef98d961926fc9f3"
+
+
