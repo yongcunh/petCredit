@@ -26,12 +26,12 @@ public class PetMarketApplicationService {
 	private StaticGasProvider staticGasProvider;
     
     @Value("${address-config.petMarket-contract-address}")
-    String petMarketContractAddress;
+    public String petMarketContractAddress;
     
 	/**
 	 * 第一次執行部署時，才需要執行, 用於部署petTable以及petMarket兩張智能合約, 之後將生成的地址記下, 在appliation.yml配置
 	 */
-	public boolean initPetMarketApplication() {
+    public String initPetMarketApplication() {
 		
 		PetTable petTable = null;
         PetMarket petMakret  = null;
@@ -46,13 +46,14 @@ public class PetMarketApplicationService {
             petMakret = PetMarket.deploy(web3j, credentials, staticGasProvider, petTable.getContractAddress()).send();
             log.info("petMakret address is {}", petMakret.getContractAddress());
             log.info("admin address is {}", credentials.getAddress());
-            
+            petMarketContractAddress = petMakret.getContractAddress();
+            return petMarketContractAddress;
         } catch (Exception e) {
           log.error("deploy contract fail: {}", e.getMessage());
-          return false;
-        }  
-		
-		return true;
+
+        }
+
+        return null;
 		
 	}
 	
