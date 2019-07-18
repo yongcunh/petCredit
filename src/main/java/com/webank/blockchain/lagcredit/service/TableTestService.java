@@ -49,7 +49,8 @@ public class TableTestService {
 		try {
 			tableTest.create().send();
 		} catch (Exception e) {
-			e.printStackTrace();
+          log.error("create contract fail: {}", e.getMessage());
+        }  
 		}
 	}
 	
