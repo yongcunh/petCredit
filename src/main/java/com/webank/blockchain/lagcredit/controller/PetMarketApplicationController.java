@@ -4,15 +4,20 @@ import com.webank.blockchain.lagcredit.constants.GasConstants;
 import com.webank.blockchain.lagcredit.contracts.PetMarket;
 import lombok.extern.slf4j.Slf4j;
 import org.fisco.bcos.web3j.crypto.Credentials;
+import org.fisco.bcos.web3j.crypto.ECKeyPair;
+import org.fisco.bcos.web3j.crypto.Keys;
+import org.fisco.bcos.web3j.crypto.gm.GenCredential;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.fisco.bcos.web3j.tuples.generated.Tuple7;
 import org.fisco.bcos.web3j.tx.gas.StaticGasProvider;
+import org.fisco.bcos.web3j.utils.Numeric;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.webank.blockchain.lagcredit.service.PetMarketApplicationService;
+import com.webank.blockchain.lagcredit.tools.UserKeyUtils;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -21,6 +26,9 @@ import java.util.List;
 @RestController
 public class PetMarketApplicationController {
 
+	static final int PUBLIC_KEY_SIZE = 64;
+	static final int PUBLIC_KEY_LENGTH_IN_HEX = PUBLIC_KEY_SIZE << 1;
+	
     @Autowired
     private PetMarketApplicationService applicationService;
 
@@ -38,6 +46,8 @@ public class PetMarketApplicationController {
     private Web3j web3j;
     @Autowired
     private Credentials credentials;
+    
+    
     //    private String tableContractAddress;
 //    private String applicationService.petMarketContractAddress;
 
@@ -81,7 +91,15 @@ public class PetMarketApplicationController {
                 GasConstants.GAS_PRICE, GasConstants.GAS_LIMIT));
         return petMarket;
     }
-
+    
+    public PetMarket load(Credentials credentials ) {
+        if (applicationService.petMarketContractAddress == null)
+            init();
+        PetMarket petMarket = PetMarket.load(applicationService.petMarketContractAddress, web3j, credentials, new StaticGasProvider(
+                GasConstants.GAS_PRICE, GasConstants.GAS_LIMIT));
+        return petMarket;
+    }
+    
     @GetMapping("/isAdmin")
     public Boolean isAdmin() {
         PetMarket PetMarket = load();
@@ -95,7 +113,15 @@ public class PetMarketApplicationController {
         }
         return null;
     }
-
+    
+    public Credentials userCredentials(String privateKey) throws Exception{
+    	Credentials credentials = GenCredential.create(privateKey);
+        if (credentials == null) {
+            throw new Exception("create Credentials failed");
+        }
+        return credentials;
+    }
+    
     @GetMapping("/sale")
     public int sale(String name, String petType, BigInteger price, String description, String url, BigInteger birthday) throws Exception {
         PetMarket PetMarket = load();
@@ -104,14 +130,36 @@ public class PetMarketApplicationController {
         return getPetList().getValue1().size() + 999;
     }
 
+    @GetMapping("/genUserKey")
+    public String genUserKey() throws Exception {
+    	ECKeyPair keyPair = Keys.createEcKeyPair();
+        String publicKey = Numeric.toHexStringWithPrefixZeroPadded(keyPair.getPublicKey(), PUBLIC_KEY_LENGTH_IN_HEX);
+        String privateKey = Numeric.toHexStringNoPrefix(keyPair.getPrivateKey());
+        String address = "0x" + Keys.getAddress(publicKey);
+        
+        return "publicKey:" + publicKey + "\n privateKey:" + privateKey + "\naddress:" + address;
+    	
+    }
+    
     @GetMapping("/createUser")
-    public TransactionReceipt createUser() throws Exception {
-        PetMarket PetMarket = load();
+    public TransactionReceipt createUser(String privateKey) throws Exception {
+    	PetMarket PetMarket = load();
+    	
+    	if(privateKey != null && !privateKey.isEmpty()) {
+    		//使用用戶自己的private key建立帳號
+    		PetMarket = load(userCredentials(privateKey));
+    	}else {
+    		//如果沒有傳入privateKey時, 就用系統的
+    		PetMarket = load();
+    	}
+        
         TransactionReceipt receipt = PetMarket.createUser().send();
 
         return receipt;
     }
-
+    
+    
+    
     @GetMapping("/cancel")
     public TransactionReceipt cancel(String id) throws Exception {
         PetMarket PetMarket = load();
