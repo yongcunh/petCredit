@@ -25,19 +25,20 @@ contract PetTable {
         admin = msg.sender;
     }
     
-    //create table
+    //建立table, 當第一次部署合約時, 才需要執行
     function create() public onlyAdmin() returns(int) {
         TableFactory tf = TableFactory(0x1001); //The fixed address is 0x1001 for TableFactory
-        
-        int count = tf.createTable("t_pet", "id", "name, petType, birthday, price, description, active, url, owner_address");
+        //第一個參數t_pet 為table name, 成個節點通用, 所以一但建立後, 就算在其他節點或者其他合約, 都不能建立, 會爆table already exist
+        //第二個參數id 為table key, 最基本的搜索至少包括這個key
+		//第三個參數為表的各個欄位
+		int count = tf.createTable("t_pet", "id", "name, petType, birthday, price, description, active, url, owner_address");
 		emit CreateResult(count);
 
 	    return count;
     }
 	
-	//select records
-    function select(string idx) public onlyAdmin() constant returns(string[] memory ids,string[] memory name_list, string[] memory type_list,
-	    int[] price_list, string[] memory description_list, string[] memory active_list, address[] memory owner_address_list){
+	//根據TableTest.sol 寫的查詢方法, 可以找到指定key中的數據,並以Tuple方法返回, 不過由於返回的參數數量有限, 所以只能返回一些基本資料
+    function select(string idx) public onlyAdmin() constant returns(string[] memory ids,string[] memory name_list, string[] memory type_list, int[] price_list, string[] memory description_list, string[] memory active_list, address[] memory owner_address_list){
         TableFactory tf = TableFactory(0x1001);
         Table table = tf.openTable("t_pet");
         
@@ -67,7 +68,7 @@ contract PetTable {
  
     }
 	
-	//select records
+	//搜索指定key, 返回Entry
     function selectEntry(string id) public  constant returns(Entry){
         TableFactory tf = TableFactory(0x1001);
         Table table = tf.openTable("t_pet");
@@ -81,8 +82,6 @@ contract PetTable {
 	    }
  
     }
-	
-	
 	
 	//insert records
     function insert(string name, string petType, int price, string description, string active, string url, int birthday) public returns(int) {
@@ -161,8 +160,8 @@ contract PetTable {
         return count;
     }
     
-    //select all records
-    function selectAll() public onlyAdmin() constant returns(string[] memory ids,string[] memory name_list, string[] memory type_list,
+    //查詢全部記錄, 由於amdb的select必須指定key, 所以建立了id_index array 記錄所有pet的id, 再遍歷id_index找出t_pet全部記錄
+    function selectAll() public constant returns(string[] memory ids,string[] memory name_list, string[] memory type_list,
 	    int[] price_list, string[] memory description_list, string[] memory active_list, address[] memory owner_address_list){
         TableFactory tf = TableFactory(0x1001);
         Table table = tf.openTable("t_pet");
@@ -178,8 +177,9 @@ contract PetTable {
 		owner_address_list=new address[](uint256(id_index.length));
 		
 		for(uint i = 0; i < id_index.length; ++i){
-		    bytes memory tempEmptyStringTest = bytes(id_index[i]); // Uses memory
-            if (tempEmptyStringTest.length == 0) {
+		    bytes memory tempEmptyStringTest = bytes(id_index[i]); 
+            //判斷id_index指定元素是否有內容
+			if (tempEmptyStringTest.length == 0) {
                 // emptyStringTest is an empty string
             } else {
                 Entries entries = table.select(id_index[i], condition);
@@ -199,7 +199,7 @@ contract PetTable {
 		}
     }
     
-    function getIdIndex() constant onlyAdmin() returns(string[]){
+    function getIdIndex() constant  returns(string[]){
         return id_index;
     }
     

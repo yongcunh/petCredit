@@ -7,7 +7,8 @@ contract TableFactory {
 contract Condition {
     function EQ(string, int);
     function EQ(string, string);
-    
+    function EQ(string, address);
+	
     function NE(string, int);
     function NE(string, string);
 

@@ -2,6 +2,10 @@ pragma solidity ^0.4.24;
 pragma experimental ABIEncoderV2;
 import "./Table.sol";
 
+/**
+ 因為amdb的限制已不使用, 主要限制是不能通過地址搜索相應的id, select 中的condition 不支持address
+ 這部份的代碼參考價目不高, 大部份都是PetTable中抄過來的
+**/
 contract UsersTable {
 	event CreateResult(int count);
     event InsertResult(int count);
@@ -29,21 +33,21 @@ contract UsersTable {
     function create() public onlyAdmin() returns(int){
         TableFactory tf = TableFactory(0x1001); //The fixed address is 0x1001 for TableFactory
         
-        int count = tf.createTable("t_users", "id", "userName, balance, user_address");
+        int count = tf.createTable("t_users_v2", "name", "id, userName, balance, user_address");
 		emit CreateResult(count);
 
 	    return count;
     }
 	
 	//select records
-    function select(string idx) public constant returns(string[] memory ids,string[] memory userName_list, 
+    function selectAll() public constant returns(string[] memory ids,string[] memory userName_list, 
     int[] memory balance_list, address[] memory user_address_list){
         TableFactory tf = TableFactory(0x1001);
-        Table table = tf.openTable("t_users");
+        Table table = tf.openTable("t_users_v2");
         
         Condition condition = table.newCondition();
         
-        Entries entries = table.select(idx, condition);
+        Entries entries = table.select("users", condition);
         
 		ids=new string[](uint256(entries.size()));
 		userName_list=new string[](uint256(entries.size()));
@@ -64,7 +68,7 @@ contract UsersTable {
 	//select records
     function selectEntry(string id) public constant returns(Entry){
         TableFactory tf = TableFactory(0x1001);
-        Table table = tf.openTable("t_users");
+        Table table = tf.openTable("t_users_v2");
         
         Condition condition = table.newCondition();
         
@@ -76,19 +80,35 @@ contract UsersTable {
  
     }
     
+    function selectByAddress(address x) public constant returns(string){
+        TableFactory tf = TableFactory(0x1001);
+        Table table = tf.openTable("t_users_v2");
+        
+        Condition condition = table.newCondition();
+        condition.EQ("user_address", x);
+        
+        Entries entries = table.select("users", condition);
+        
+	    if(entries.size() > 0){
+	        return entries.get(0).getString("id");
+	    }
+        
+    }
+    
 	//insert records
     function insert(string userName, int balance) public returns(int) {
         TableFactory tf = TableFactory(0x1001);
-        Table table = tf.openTable("t_users");
+        Table table = tf.openTable("t_users_v2");
         
         Entry entry = table.newEntry();
         string memory id = uint2str(t_users_seq++);
+        entry.set("name","users");
         entry.set("id", id);
         entry.set("userName",userName);
         entry.set("balance",balance);
         entry.set("user_address", msg.sender);
         
-        int count = table.insert(id, entry);
+        int count = table.insert("users", entry);
         emit InsertResult(count);
 		
 		id_index.push(id);
@@ -99,9 +119,10 @@ contract UsersTable {
     //update records
     function update(string id, string userName, int balance) public returns(int) {
         TableFactory tf = TableFactory(0x1001);
-        Table table = tf.openTable("t_users");
+        Table table = tf.openTable("t_users_v2");
         
         Entry entry = table.newEntry();
+        entry.set("name", "users");
         entry.set("id", id);
         entry.set("userName",userName);
         entry.set("balance",balance);
@@ -110,7 +131,7 @@ contract UsersTable {
         Condition condition = table.newCondition();
         condition.EQ("id", id);
 
-        int count = table.update(id, entry, condition);
+        int count = table.update("users", entry, condition);
         emit UpdateResult(count);
         
         return count;
@@ -118,12 +139,12 @@ contract UsersTable {
     
     function update(string id, Entry entry) public returns(int){
         TableFactory tf = TableFactory(0x1001);
-        Table table = tf.openTable("t_users");
+        Table table = tf.openTable("t_users_v2");
         
         Condition condition = table.newCondition();
         condition.EQ("id", id);
         
-        int count = table.update(id, entry, condition);
+        int count = table.update("users", entry, condition);
         emit UpdateResult(count);
         
         return count;
@@ -133,22 +154,23 @@ contract UsersTable {
     //remove records
     function remove(string id) public returns(int){
         TableFactory tf = TableFactory(0x1001);
-        Table table = tf.openTable("t_users");
+        Table table = tf.openTable("t_users_v2");
         
         Condition condition = table.newCondition();
         condition.EQ("id", id);
         
-        int count = table.remove(id, condition);
+        int count = table.remove("users", condition);
         emit RemoveResult(count);
         
         return count;
     }
     
     //select all records
+    /*
     function selectAll() public constant returns(string[] memory ids,string[] memory userName_list, 
     int[] memory balance_list, address[] memory user_address_list){
         TableFactory tf = TableFactory(0x1001);
-        Table table = tf.openTable("t_users");
+        Table table = tf.openTable("t_users_v2");
         
         Condition condition = table.newCondition();
         
@@ -175,7 +197,7 @@ contract UsersTable {
 		    
 		}
     }
-    
+    */
     function getIdIndex() constant returns(string[]){
         return id_index;
     }
